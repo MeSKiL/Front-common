@@ -33,7 +33,7 @@ async function getOpenId(code:string,weChatInnerId:string,requestUrl:string):Pro
     code,
     weChatInnerId
   };
-  const res = await axios.post(requestUrl,params);
+  const res = await axios(requestUrl,params);
   if(res.data.code===1000){
     return res.data.data // openId
   }
