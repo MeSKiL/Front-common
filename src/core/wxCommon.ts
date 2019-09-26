@@ -1,6 +1,7 @@
 import axios from 'meskil-ts-axios'
 import {getWxOpenIdUrlQuery, returnWxOpenId, WeiXinConfig} from '../types/wxCommon'
-
+// @ts-ignore
+import qs from 'qs'
 // @ts-ignore
 import wx from 'weixin-js-sdk';
 import mergeConfig from '../util/mergeConfig'
@@ -95,7 +96,7 @@ class WXConfig {
       weChatConfigId: this.WXconfig.weChatInnerId,
       targetUrl: this.WXconfig.url,
     };
-    const res = await axios.post(this.WXconfig.requestUrl, genConfigParams, {
+    const res = await axios.post(this.WXconfig.requestUrl, qs.stringify(genConfigParams), {
       headers: {
         'Content-Type':'application/x-www-form-urlencoded'
       }
