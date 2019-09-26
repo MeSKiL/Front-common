@@ -76,7 +76,7 @@ let defaultJsApiList = [
 let defaultWXconfig = {
   debug: false,
   jsApiList: defaultJsApiList,
-  hide: true,
+  hide: false,
   hideItem: ['menuItem:share:appMessage', 'menuItem:share:timeline', 'menuItem:share:qq',
     'menuItem:share:QZone', 'menuItem:share:weiboApp', 'menuItem:copyUrl'],
   callback: () => {
