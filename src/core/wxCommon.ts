@@ -97,7 +97,7 @@ class WXConfig {
     };
     const res = await axios.post(this.WXconfig.requestUrl, genConfigParams, {
       headers: {
-        contentType: 'application/x-www-form-urlencoded'
+        'Content-Type':'application/x-www-form-urlencoded'
       }
     });
     if (res.data.code === 1000) {
