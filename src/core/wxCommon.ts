@@ -6,7 +6,6 @@ import wx from 'weixin-js-sdk';
 import mergeConfig from '../util/mergeConfig'
 import {isFunction} from "../util";
 
-
 /**
  *
  * @param params {getWxOpenIdUrlQuery} 存在state和code的对象
@@ -79,7 +78,8 @@ let defaultWXconfig = {
   hide: true,
   hideItem: ['menuItem:share:appMessage', 'menuItem:share:timeline', 'menuItem:share:qq',
     'menuItem:share:QZone', 'menuItem:share:weiboApp', 'menuItem:copyUrl'],
-  callback: () => {}
+  callback: () => {
+  }
 };
 
 
@@ -95,7 +95,11 @@ class WXConfig {
       weChatConfigId: this.WXconfig.weChatInnerId,
       targetUrl: this.WXconfig.url,
     };
-    const res = await axios.post(this.WXconfig.requestUrl, genConfigParams);
+    const res = await axios.post(this.WXconfig.requestUrl, genConfigParams, {
+      headers: {
+        contentType: 'application/x-www-form-urlencoded'
+      }
+    });
     if (res.data.code === 1000) {
       const resData = res.data.data;
       const {
