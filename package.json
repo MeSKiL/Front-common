@@ -120,6 +120,7 @@
     "typescript": "^3.0.3"
   },
   "dependencies": {
-    "meskil-ts-axios": "0.0.3"
+    "meskil-ts-axios": "0.0.3",
+    "weixin-js-sdk": "^1.4.0-test"
   }
 }
