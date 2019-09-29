@@ -1,5 +1,5 @@
 import axios from 'meskil-ts-axios'
-import {getWxOpenIdUrlQuery, returnWxOpenId, WeiXinConfig, WXConfigClass, signFunc} from '../types/wxCommon'
+import {getWxOpenIdUrlQuery, returnWxOpenId, WeiXinConfig, WXConfigClass, signFunc,commonCallBack} from '../types/wxCommon'
 // @ts-ignore
 import qs from 'qs'
 // @ts-ignore
@@ -160,7 +160,7 @@ class WXConfig implements WXConfigClass {
     this.weChatShareAppMessage(title, desc, link, icon);
   }
 
-  weChatShareTimeline(title: string, link: string, imgUrl: string, callback?: any): void {
+  weChatShareTimeline(title: string, link: string, imgUrl: string, callback?: commonCallBack): void {
     let ret: any = {};
     wx.ready(() => {
       wx.onMenuShareTimeline({
@@ -210,7 +210,7 @@ class WXConfig implements WXConfigClass {
     });
   }
 
-  weChatShareAppMessage(title: string, desc: string, link: string, imgUrl: string, callback?: any): void {
+  weChatShareAppMessage(title: string, desc: string, link: string, imgUrl: string, callback?: commonCallBack): void {
     let ret = {};
     wx.ready(() => {
       wx.onMenuShareAppMessage({
@@ -262,9 +262,80 @@ class WXConfig implements WXConfigClass {
     });
   }
 
-  async payForH5InnerId(productDesc: string, orderNum: string, price: number, notifyUrl: string, successUrl: string, requestUrl: string, openId: string, isWeChat: boolean, signFunc?: signFunc<any>, apiRootType?: string, attach: string = 'attach', failureUrl?: string, callback?: any) {
-    let instance = axios.create();
+  weChatScanQrCode(scanType:any = ['qrCode', 'barCode'],needResult:number = 1, success?:commonCallBack, failure?:commonCallBack):void { // ["qrCode","barCode"]
+    wx.ready(() => {
+      wx.scanQRCode({
+        needResult: needResult,
+        scanType,
+        success(res:any) {
+          if (success && isFunction(success)) {
+            success(res);
+          }
+        },
+      });
+    });
+    wx.error((res:any) => {
+      if (failure && isFunction(failure)) {
+        failure(res);
+      }
+    });
+  }
 
+  weChatGetLocation(type:string='gcj02',success?:commonCallBack, failure?:commonCallBack):void {
+    wx.ready(() => {
+      wx.getLocation({
+        type: type, // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
+        success(res:any) {
+          if (success && isFunction(success)) {
+            success(res);
+          }
+        },
+        fail(err:any) {
+          if (failure && isFunction(failure)) {
+            failure(err);
+          }
+        },
+        cancel(err:any) {
+          if (failure && isFunction(failure)) {
+            failure(err);
+          }
+        },
+        complete(err:any) {
+          console.log(err);
+        },
+      });
+    });
+    wx.error((err:any) => {
+      console.warn(err);
+    });
+  }
+
+  /**
+   *
+   * @param productDesc
+   * @param orderNum
+   * @param price
+   * @param notifyUrl
+   * @param successUrl
+   * @param requestUrl
+   * @param openId
+   * @param isWeChat
+   * @param signFunc
+   * @param apiRootType
+   * @param attach
+   * @param failureUrl
+   * @param callback
+   *
+   * @example payForH5InnerId(config, productDesc, orderNum, price, notifyUrl,  successUrl, failureUrl = '',attach='attach', callback = () => {
+    }) {
+        let openId = storage.get("openId");
+        let isWechat = checkPlatform.isWeiXin();
+        config.payForH5InnerId(productDesc, orderNum, price, notifyUrl, successUrl, process.env.VUE_APP_PAY_CENTER_API_ROOT + Urls.MP_APPLY_PAY_API, openId, isWechat, srmh9nv0.srmh9nv0, Urls.PAY_CENTER_API,attach,failureUrl,callback)
+    }
+   */
+
+  async payForH5InnerId(productDesc: string, orderNum: string, price: number, notifyUrl: string, successUrl: string, requestUrl: string, openId: string, isWeChat: boolean, signFunc?: signFunc<any>, apiRootType?: string, attach: string = 'attach', failureUrl?: string, callback?: commonCallBack) {
+    let instance = axios.create();
     if (signFunc && isFunction(signFunc) && apiRootType) {
       instance.interceptors.request.use(config => {
         config.data = signFunc(config.data, apiRootType);
@@ -272,9 +343,6 @@ class WXConfig implements WXConfigClass {
         return config
       });
     }
-
-
-
     const successRedirectUrl = encodeURIComponent(successUrl);
     const tradeType = isWeChat ? 'JSAPI' : 'MWEB';
     const applyPayDataParams = {
@@ -341,13 +409,13 @@ class WXConfig implements WXConfigClass {
             },
             cancel(res: any) {
               // alert('取消支付');
-              if (callback && callback instanceof Function) {
+              if (callback && isFunction(callback)) {
                 callback(res);
               }
             },
             fail(res: any) {
               // alert("支付失败");
-              if (callback && callback instanceof Function) {
+              if (callback && isFunction(callback)) {
                 callback(res);
               }
             },
@@ -377,7 +445,6 @@ async function weChatConfig(config: WeiXinConfig): Promise<WXConfigClass> {
   }
   return instance
 }
-
 
 export default {
   initOpenId,
