@@ -1,5 +1,5 @@
 import axios from 'meskil-ts-axios'
-import {getWxOpenIdUrlQuery, returnWxOpenId, WeiXinConfig,WXConfigClass} from '../types/wxCommon'
+import {getWxOpenIdUrlQuery, returnWxOpenId, WeiXinConfig, WXConfigClass} from '../types/wxCommon'
 // @ts-ignore
 import qs from 'qs'
 // @ts-ignore
@@ -83,11 +83,8 @@ let defaultWXconfig = {
 };
 
 
-
-
-
 /**
-  weChatConfig(arg) {
+ weChatConfig(arg) {
     let params = {
       weChatInnerId: process.env.VUE_APP_WE_CHAT_INNER_ID,
       url,
@@ -99,21 +96,21 @@ let defaultWXconfig = {
   }
  * */
 
-class WXConfig implements WXConfigClass{
+class WXConfig implements WXConfigClass {
   WXconfig: WeiXinConfig;
 
   constructor(WXconfig: WeiXinConfig) {
     this.WXconfig = mergeConfig(defaultWXconfig, WXconfig);
   }
 
-  async config():Promise<boolean> {
+  async config(): Promise<boolean> {
     const genConfigParams = {
       weChatConfigId: this.WXconfig.weChatInnerId,
       targetUrl: this.WXconfig.url,
     };
     const res = await axios.post(this.WXconfig.requestUrl, qs.stringify(genConfigParams), {
       headers: {
-        'Content-Type':'application/x-www-form-urlencoded'
+        'Content-Type': 'application/x-www-form-urlencoded'
       }
     });
     if (res.data.code === 1000) {
@@ -135,13 +132,13 @@ class WXConfig implements WXConfigClass{
       wx.config(configData);
       isFunction(this.WXconfig.callback) && this.WXconfig.callback;
       return true
-    }else{
+    } else {
       return false
     }
   }
 
-  hide(hide:boolean,hideItem:any = ['menuItem:share:appMessage', 'menuItem:share:timeline', 'menuItem:share:qq',
-    'menuItem:share:QZone', 'menuItem:share:weiboApp', 'menuItem:copyUrl'],):void{
+  hide(hide: boolean = false, hideItem: any = ['menuItem:share:appMessage', 'menuItem:share:timeline', 'menuItem:share:qq',
+    'menuItem:share:QZone', 'menuItem:share:weiboApp', 'menuItem:copyUrl'],): void {
     wx.ready(() => {
       if (hide) { // 隐藏
         hideWeChatMenuItems(hideItem);
@@ -150,127 +147,128 @@ class WXConfig implements WXConfigClass{
       }
     });
   }
+
+  share(title:string, desc:string, link:string, icon:string, timeLineTitle?:string):void {
+    this.weChatShareTimeline((timeLineTitle?timeLineTitle : title), link, icon);
+    this.weChatShareAppMessage(title, desc, link, icon);
+  }
+
+  weChatShareTimeline(title:string, link:string, imgUrl:string, callback?:any):void {
+    let ret:any = {};
+    wx.ready(() => {
+      wx.onMenuShareTimeline({
+        // 分享标题
+        title,
+        // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+        link,
+        // 分享图标
+        imgUrl,
+        // 用户确认分享后执行的回调函数
+        success() {
+          console.log('分享回调函数');
+          console.log(`shareLink= ${link}`);
+          if (callback && isFunction(callback)) {
+            ret = {
+              success: true,
+              type: '1',
+              msg: '分享成功',
+            };
+            callback(ret);
+          }
+        },
+        // 用户取消分享后执行的回调函数
+        cancel() {
+          console.log('取消分享回调函数');
+          // alert('取消分享回调函数');
+          if (callback && isFunction(callback)) {
+            ret = {
+              success: false,
+              type: '2',
+              msg: '取消分享',
+            };
+            callback(ret);
+          }
+        },
+        fail(res:any) {
+          if (callback && isFunction(callback)) {
+            ret = {
+              success: false,
+              type: '3',
+              msg: res,
+            };
+            callback(ret);
+          }
+        },
+      });
+    });
+  }
+
+  weChatShareAppMessage(title:string, desc:string, link:string, imgUrl:string, callback?:any):void {
+    let ret = {};
+    wx.ready(() => {
+      wx.onMenuShareAppMessage({
+        // 分享标题
+        title,
+        // 分享描述
+        desc,
+        // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+        link,
+        // 分享图标
+        imgUrl,
+        // 用户确认分享后执行的回调函数
+        success() {
+          console.log('分享回调函数');
+          console.log(`shareLink= ${link}`);
+          if (callback && isFunction(callback)) {
+            ret = {
+              success: true,
+              type: '1',
+              msg: '分享成功',
+            };
+            callback(ret);
+          }
+        },
+        // 用户取消分享后执行的回调函数
+        cancel() {
+          console.log('取消分享回调函数');
+          // alert('取消分享回调函数');
+          if (callback && isFunction(callback)) {
+            ret = {
+              success: false,
+              type: '2',
+              msg: '取消分享',
+            };
+            callback(ret);
+          }
+        },
+        fail(res:any) {
+          if (callback && isFunction(callback)) {
+            ret = {
+              success: false,
+              type: '3',
+              msg: res,
+            };
+            callback(ret);
+          }
+        },
+      });
+    });
+  }
 }
 
-function weChatConfig(config: WeiXinConfig):WXConfigClass {
+function weChatConfig(config: WeiXinConfig): WXConfigClass {
   return new WXConfig(config)
 }
 
 function hideWeChatMenuItems(menuList: any = ['menuItem:share:qq', 'menuItem:share:QZone', 'menuItem:share:weiboApp',
   'menuItem:copyUrl',
-]):void {
+]): void {
   wx.hideMenuItems({
     menuList // 要隐藏的菜单项，只能隐藏“传播类”和“保护类”按钮，所有menu项见附录4
   });
 }
 
 
-// function share(title:string, desc:string, link:string, icon:string, timeLineTitle?:string):void {
-//   weChatShareTimeline((timeLineTitle?timeLineTitle : title), link, icon);
-//   weChatShareAppMessage(title, desc, link, icon);
-// }
-//
-// function weChatShareTimeline(title:string, link:string, imgUrl:string, callback?:any) {
-//   let ret:any = {};
-//   wx.ready(() => {
-//     wx.onMenuShareTimeline({
-//       // 分享标题
-//       title,
-//       // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-//       link,
-//       // 分享图标
-//       imgUrl,
-//       // 用户确认分享后执行的回调函数
-//       success() {
-//         console.log('分享回调函数');
-//         console.log(`shareLink= ${link}`);
-//         if (callback && isFunction(callback)) {
-//           ret = {
-//             success: true,
-//             type: '1',
-//             msg: '分享成功',
-//           };
-//           callback(ret);
-//         }
-//       },
-//       // 用户取消分享后执行的回调函数
-//       cancel() {
-//         console.log('取消分享回调函数');
-//         // alert('取消分享回调函数');
-//         if (callback && isFunction(callback)) {
-//           ret = {
-//             success: false,
-//             type: '2',
-//             msg: '取消分享',
-//           };
-//           callback(ret);
-//         }
-//       },
-//       fail(res:any) {
-//         if (callback && isFunction(callback)) {
-//           ret = {
-//             success: false,
-//             type: '3',
-//             msg: res,
-//           };
-//           callback(ret);
-//         }
-//       },
-//     });
-//   });
-// }
-//
-// function weChatShareAppMessage(title, desc, link, imgUrl, callback?:void) {
-//   let ret = {};
-//   wx.ready(() => {
-//     wx.onMenuShareAppMessage({
-//       // 分享标题
-//       title,
-//       // 分享描述
-//       desc,
-//       // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
-//       link,
-//       // 分享图标
-//       imgUrl,
-//       // 用户确认分享后执行的回调函数
-//       success() {
-//         console.log('分享回调函数');
-//         console.log(`shareLink= ${link}`);
-//         if (callback && callback instanceof Function) {
-//           ret = {
-//             success: true,
-//             type: '1',
-//             msg: '分享成功',
-//           };
-//           callback(ret);
-//         }
-//       },
-//       // 用户取消分享后执行的回调函数
-//       cancel() {
-//         console.log('取消分享回调函数');
-//         // alert('取消分享回调函数');
-//         if (callback && callback instanceof Function) {
-//           ret = {
-//             success: false,
-//             type: '2',
-//             msg: '取消分享',
-//           };
-//           callback(ret);
-//         }
-//       },
-//       fail(res) {
-//         if (callback && callback instanceof Function) {
-//           ret = {
-//             success: false,
-//             type: '3',
-//             msg: res,
-//           };
-//           callback(ret);
-//         }
-//       },
-//     });
-//   });
-// },
 
 
 export default {
