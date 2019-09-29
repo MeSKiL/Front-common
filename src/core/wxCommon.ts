@@ -263,14 +263,16 @@ class WXConfig implements WXConfigClass {
   }
 
   async payForH5InnerId(productDesc: string, orderNum: string, price: number, notifyUrl: string, successUrl: string, requestUrl: string, openId: string, isWeChat: boolean, signFunc?: signFunc<any>, apiRootType?: string, attach: string = 'attach', failureUrl?: string, callback?: any) {
+    let instance = axios.create();
+
     if (signFunc && isFunction(signFunc) && apiRootType) {
-      const instance = axios.create();
       instance.interceptors.request.use(config => {
         config.data = signFunc(config.data, apiRootType);
         console.log(config);
         return config
       });
     }
+
 
 
     const successRedirectUrl = encodeURIComponent(successUrl);
@@ -295,7 +297,7 @@ class WXConfig implements WXConfigClass {
     let paySign = '';
     let mwebUrl = '';
 
-    const res = await axios.post(requestUrl, applyPayDataParams, {
+    const res = await instance.post(requestUrl, applyPayDataParams, {
       headers: {
         'Content-Type': 'application/json'
       }
