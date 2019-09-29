@@ -13,8 +13,11 @@ export interface WeiXinConfig{
   requestUrl:string
   callback?:void
   jsApiList?:any
-  hide?:boolean
-  hideItem?:any
 
   [propName: string]: any
+}
+
+export interface WXConfigClass {
+  WXconfig:WeiXinConfig
+  config:()=>Promise<boolean>
 }
