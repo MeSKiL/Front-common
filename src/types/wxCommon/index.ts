@@ -24,8 +24,8 @@ export interface WXConfigClass {
   share(title:string, desc:string, link:string, icon:string, timeLineTitle?:string):void
   weChatShareTimeline(title:string, link:string, imgUrl:string, callback?:any):void
   weChatShareAppMessage(title:string, desc:string, link:string, imgUrl:string, callback?:any):void
-  weChatScanQrCode(scanType?:any,needResult?:number, success?:commonCallBack, failure?:commonCallBack):void
-  weChatGetLocation(type?:string,success?:commonCallBack, failure?:commonCallBack):void
+  weChatScanQrCode(success?:commonCallBack, failure?:commonCallBack,scanType?:any,needResult?:number):void
+  weChatGetLocation(success?:commonCallBack, failure?:commonCallBack,type?:string):void
   payForH5InnerId(productDesc: string, orderNum: string, price: number, notifyUrl: string, successUrl: string, requestUrl: string, openId: string, isWeChat: boolean,signFunc?: signFunc<any>, apiRootType?: string, attach?: string, failureUrl?: string, callback?: any,):void
 }
 export interface signFunc<T> {

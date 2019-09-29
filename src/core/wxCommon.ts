@@ -103,6 +103,7 @@ let defaultWXconfig = {
  config.weChatShareTimeline('测试分享','http://uat.jz-ins.cn/uat/uniAppCore/pages/index/index','')
  * */
 
+
 class WXConfig implements WXConfigClass {
   WXconfig: WeiXinConfig;
 
@@ -262,7 +263,23 @@ class WXConfig implements WXConfigClass {
     });
   }
 
-  weChatScanQrCode(scanType:any = ['qrCode', 'barCode'],needResult:number = 1, success?:commonCallBack, failure?:commonCallBack):void { // ["qrCode","barCode"]
+  /**
+   *
+   * @param success
+   * @param failure
+   * @param scanType  ['qrCode', 'barCode']
+   * @param needResult:number
+   *
+   * @example scanQrCode(){
+                this.config.weChatScanQrCode((res)=>{
+                    alert(JSON.stringify(res))
+                },(err)=>{
+                    console.log(err)
+                })
+            }
+   */
+
+  weChatScanQrCode(success?:commonCallBack, failure?:commonCallBack,scanType:any = ['qrCode', 'barCode'],needResult:number = 1):void { // ["qrCode","barCode"]
     wx.ready(() => {
       wx.scanQRCode({
         needResult: needResult,
@@ -281,7 +298,22 @@ class WXConfig implements WXConfigClass {
     });
   }
 
-  weChatGetLocation(type:string='gcj02',success?:commonCallBack, failure?:commonCallBack):void {
+  /**
+   *
+   * @param success
+   * @param failure
+   * @param type wgs84,gcj02
+   *
+   * @example    getLocation(){
+                  this.config.weChatGetLocation((res)=>{
+                    alert(JSON.stringify(res))
+                  },(err)=>{
+                    alert(JSON.stringify(err))
+                  })
+                }
+   */
+
+  weChatGetLocation(success?:commonCallBack, failure?:commonCallBack,type:string='gcj02'):void {
     wx.ready(() => {
       wx.getLocation({
         type: type, // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
