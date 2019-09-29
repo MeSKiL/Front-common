@@ -1,11 +1,12 @@
 import axios from 'meskil-ts-axios'
-import {getWxOpenIdUrlQuery, returnWxOpenId, WeiXinConfig, WXConfigClass} from '../types/wxCommon'
+import {getWxOpenIdUrlQuery, returnWxOpenId, WeiXinConfig, WXConfigClass, signFunc} from '../types/wxCommon'
 // @ts-ignore
 import qs from 'qs'
 // @ts-ignore
 import wx from 'weixin-js-sdk';
 import mergeConfig from '../util/mergeConfig'
 import {isFunction} from "../util";
+
 
 /**
  *
@@ -94,6 +95,12 @@ let defaultWXconfig = {
     const config = WxCommon.weChatConfig(result);
     config.config();
   }
+ config.hide(true,['menuItem:share:appMessage', 'menuItem:share:timeline', 'menuItem:share:qq'])
+ config.hide() // ['menuItem:share:qq', 'menuItem:share:QZone', 'menuItem:share:weiboApp','menuItem:copyUrl',]
+ config.hide(true) // ['menuItem:share:appMessage', 'menuItem:share:timeline', 'menuItem:share:qq', 'menuItem:share:QZone', 'menuItem:share:weiboApp', 'menuItem:copyUrl']
+ config.share('测试分享','这是测试分享','http://uat.jz-ins.cn/uat/uniAppCore/pages/index/index','','这是朋友圈的测试分享')
+ config.weChatShareAppMessage('测试分享','这是测试分享','http://uat.jz-ins.cn/uat/uniAppCore/pages/index/index','')
+ config.weChatShareTimeline('测试分享','http://uat.jz-ins.cn/uat/uniAppCore/pages/index/index','')
  * */
 
 class WXConfig implements WXConfigClass {
@@ -138,7 +145,7 @@ class WXConfig implements WXConfigClass {
   }
 
   hide(hide: boolean = false, hideItem: any = ['menuItem:share:appMessage', 'menuItem:share:timeline', 'menuItem:share:qq',
-    'menuItem:share:QZone', 'menuItem:share:weiboApp', 'menuItem:copyUrl'],): void {
+    'menuItem:share:QZone', 'menuItem:share:weiboApp', 'menuItem:copyUrl']): void {
     wx.ready(() => {
       if (hide) { // 隐藏
         hideWeChatMenuItems(hideItem);
@@ -148,13 +155,13 @@ class WXConfig implements WXConfigClass {
     });
   }
 
-  share(title:string, desc:string, link:string, icon:string, timeLineTitle?:string):void {
-    this.weChatShareTimeline((timeLineTitle?timeLineTitle : title), link, icon);
+  share(title: string, desc: string, link: string, icon: string, timeLineTitle?: string): void {
+    this.weChatShareTimeline((timeLineTitle ? timeLineTitle : title), link, icon);
     this.weChatShareAppMessage(title, desc, link, icon);
   }
 
-  weChatShareTimeline(title:string, link:string, imgUrl:string, callback?:any):void {
-    let ret:any = {};
+  weChatShareTimeline(title: string, link: string, imgUrl: string, callback?: any): void {
+    let ret: any = {};
     wx.ready(() => {
       wx.onMenuShareTimeline({
         // 分享标题
@@ -189,7 +196,7 @@ class WXConfig implements WXConfigClass {
             callback(ret);
           }
         },
-        fail(res:any) {
+        fail(res: any) {
           if (callback && isFunction(callback)) {
             ret = {
               success: false,
@@ -203,7 +210,7 @@ class WXConfig implements WXConfigClass {
     });
   }
 
-  weChatShareAppMessage(title:string, desc:string, link:string, imgUrl:string, callback?:any):void {
+  weChatShareAppMessage(title: string, desc: string, link: string, imgUrl: string, callback?: any): void {
     let ret = {};
     wx.ready(() => {
       wx.onMenuShareAppMessage({
@@ -241,7 +248,7 @@ class WXConfig implements WXConfigClass {
             callback(ret);
           }
         },
-        fail(res:any) {
+        fail(res: any) {
           if (callback && isFunction(callback)) {
             ret = {
               success: false,
@@ -254,15 +261,101 @@ class WXConfig implements WXConfigClass {
       });
     });
   }
-}
 
-async function weChatConfig(config: WeiXinConfig): Promise<WXConfigClass> {
-  const instance = new WXConfig(config);
-  const res = await instance.config();
-  if(!res){
-    console.error('config 请求出错');
+  async payForH5InnerId(weChatConfigId: string, productDesc: string, orderNum: string, price: number, notifyUrl: string, successUrl: string, requestUrl: string, openId: string, isWeChat: boolean, attach: string = 'attach', failureUrl?: string, callback?: any, signFunc?: signFunc<any>, apiRootType?: string) {
+
+    if (signFunc && isFunction(signFunc) && apiRootType) {
+      const instance = axios.create();
+      instance.interceptors.request.use(config => {
+        config.data = signFunc(config.data, apiRootType);
+        return config
+      });
+    }
+
+
+    const successRedirectUrl = encodeURIComponent(successUrl);
+    const tradeType = isWeChat ? 'JSAPI' : 'MWEB';
+    const applyPayDataParams = {
+      weChatConfigId,
+      productDesc,
+      orderNum,
+      price,
+      notifyUrl,
+      tradeType,
+      attach,
+      openId,
+    };
+    console.log('微信预支付需要的参数 applyPayDataParams : ', applyPayDataParams);
+
+    // 声明用于接收发起支付请求后的返回结果
+    let timestamp = '';
+    let nonceStr = '';
+    let prepayId = '';
+    let signType = '';
+    let paySign = '';
+    let mwebUrl = '';
+
+    const res = await axios.post(requestUrl, applyPayDataParams, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (res.data.code === 1000) {
+      const payResultData = res.data.data;
+      // 声明用于接收发起支付请求后的返回结果
+      timestamp = payResultData.timeStamp;
+      nonceStr = payResultData.nonceStr;
+      prepayId = payResultData.prepayId;
+      signType = payResultData.signType;
+      paySign = payResultData.paySign;
+      mwebUrl = isWeChat ? '' : payResultData.mwebUrl;
+
+      if (isWeChat) {
+        // 配置完以后才能在此方法中调起微信支付的弹窗
+        wx.ready(() => {
+          // 就绪后的处理
+          wx.chooseWXPay({
+            timestamp, // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
+            nonceStr, // 支付签名随机串，不长于 32 位
+            package: `prepay_id=${prepayId}`, // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=***）
+            signType, // 签名方式，默认为'SHA1'，使用新版支付需传入'MD5'
+            paySign, // 支付签名
+            success(res: any) {
+              if (successUrl !== null && successUrl !== '') {
+                // alert(successUrl)
+                window.location.href = successUrl;
+                // alert('支付成功');
+              } else {
+                alert('支付成功, 下一步跳转页面');
+              }
+            },
+            Error(err: any) {
+              if (failureUrl !== null && failureUrl !== '') {
+                alert('支付失败');
+              } else {
+                alert(`支付失败, 错误信息:${err}`);
+              }
+            },
+            cancel(res: any) {
+              // alert('取消支付');
+              if (callback && callback instanceof Function) {
+                callback(res);
+              }
+            },
+            fail(res: any) {
+              // alert("支付失败");
+              if (callback && callback instanceof Function) {
+                callback(res);
+              }
+            },
+          });
+        });
+      } else {
+        window.location.href = `${mwebUrl}&redirect_url=${successRedirectUrl}`;
+      }
+    }
   }
-  return instance
 }
 
 function hideWeChatMenuItems(menuList: any = ['menuItem:share:qq', 'menuItem:share:QZone', 'menuItem:share:weiboApp',
@@ -274,9 +367,17 @@ function hideWeChatMenuItems(menuList: any = ['menuItem:share:qq', 'menuItem:sha
 }
 
 
+async function weChatConfig(config: WeiXinConfig): Promise<WXConfigClass> {
+  const instance = new WXConfig(config);
+  const res = await instance.config();
+  if (!res) {
+    console.error('config 请求出错');
+  }
+  return instance
+}
 
 
 export default {
   initOpenId,
-  weChatConfig
+  weChatConfig,
 }
