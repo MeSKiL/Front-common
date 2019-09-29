@@ -19,7 +19,7 @@ export interface WeiXinConfig{
 
 export interface WXConfigClass {
   WXconfig:WeiXinConfig
-  config:()=>Promise<boolean>
+  config():Promise<boolean>
   hide(hide?:boolean,hideItem?:any):void
   share(title:string, desc:string, link:string, icon:string, timeLineTitle?:string):void
   weChatShareTimeline(title:string, link:string, imgUrl:string, callback?:any):void

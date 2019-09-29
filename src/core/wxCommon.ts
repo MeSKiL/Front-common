@@ -256,8 +256,13 @@ class WXConfig implements WXConfigClass {
   }
 }
 
-function weChatConfig(config: WeiXinConfig): WXConfigClass {
-  return new WXConfig(config)
+async function weChatConfig(config: WeiXinConfig): Promise<WXConfigClass> {
+  const instance = new WXConfig(config);
+  const res = await instance.config();
+  if(!res){
+    console.error('config 请求出错');
+  }
+  return instance
 }
 
 function hideWeChatMenuItems(menuList: any = ['menuItem:share:qq', 'menuItem:share:QZone', 'menuItem:share:weiboApp',
