@@ -263,11 +263,11 @@ class WXConfig implements WXConfigClass {
   }
 
   async payForH5InnerId(productDesc: string, orderNum: string, price: number, notifyUrl: string, successUrl: string, requestUrl: string, openId: string, isWeChat: boolean, signFunc?: signFunc<any>, apiRootType?: string, attach: string = 'attach', failureUrl?: string, callback?: any) {
-
     if (signFunc && isFunction(signFunc) && apiRootType) {
       const instance = axios.create();
       instance.interceptors.request.use(config => {
         config.data = signFunc(config.data, apiRootType);
+        console.log(config);
         return config
       });
     }
