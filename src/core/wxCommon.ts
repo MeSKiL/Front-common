@@ -262,7 +262,7 @@ class WXConfig implements WXConfigClass {
     });
   }
 
-  async payForH5InnerId(weChatConfigId: string, productDesc: string, orderNum: string, price: number, notifyUrl: string, successUrl: string, requestUrl: string, openId: string, isWeChat: boolean, attach: string = 'attach', failureUrl?: string, callback?: any, signFunc?: signFunc<any>, apiRootType?: string) {
+  async payForH5InnerId(productDesc: string, orderNum: string, price: number, notifyUrl: string, successUrl: string, requestUrl: string, openId: string, isWeChat: boolean, signFunc?: signFunc<any>, apiRootType?: string, attach: string = 'attach', failureUrl?: string, callback?: any) {
 
     if (signFunc && isFunction(signFunc) && apiRootType) {
       const instance = axios.create();
@@ -276,7 +276,7 @@ class WXConfig implements WXConfigClass {
     const successRedirectUrl = encodeURIComponent(successUrl);
     const tradeType = isWeChat ? 'JSAPI' : 'MWEB';
     const applyPayDataParams = {
-      weChatConfigId,
+      weChatConfigId: this.WXconfig.weChatInnerId,
       productDesc,
       orderNum,
       price,
