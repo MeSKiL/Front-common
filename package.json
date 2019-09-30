@@ -1,6 +1,6 @@
 {
   "name": "front-common",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "",
   "keywords": [],
   "main": "dist/front-common.umd.js",
